@@ -66,10 +66,69 @@ The foundation layer provides a novel blockchain with built-in transaction rever
 - Recipient must return matching confirmation
 - Prevents misdirected transfers and impersonation
 
-### Technology
-- **Language**: Julia
-- **Consensus**: To be determined (likely PoS variant)
-- **Block Time**: Target under 5 seconds
+### Technology Stack
+
+#### Blockchain Framework Evaluation
+
+We evaluated multiple blockchain frameworks for the Layer 1 implementation:
+
+| Framework | Language | Consensus | Key Features | Evaluation |
+|:--|:--|:--|:--|:--|
+| **Cosmos SDK** | Go | CometBFT | IBC interoperability, modular | ⭐ Primary candidate |
+| **Substrate** | Rust | BABE/GRANDPA | Forkless upgrades, Polkadot | ⭐ Strong alternative |
+| **OP Stack** | Solidity | Ethereum L2 | EVM compatible, proven | Fallback option |
+| **Custom** | Julia/Rust | Custom | Full flexibility | High development cost |
+
+**Primary Recommendation: Cosmos SDK**
+
+Reasons:
+- dYdX successfully migrated from Ethereum for performance reasons
+- Instant finality (no block reorganization) aligns well with reversible transactions
+- IBC enables future cross-chain connectivity
+- Modular architecture allows custom transaction logic
+
+**Alternative: Substrate**
+
+Reasons:
+- Astar Network demonstrates Japanese ecosystem success
+- Forkless runtime upgrades reduce maintenance burden
+- Can operate as solo chain or Polkadot parachain
+
+#### Hybrid Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Mouseion Stack                        │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────────┐    ┌───────────────────────────┐  │
+│  │  Julia Services │    │  Blockchain Core          │  │
+│  │                 │    │  (Cosmos SDK / Substrate) │  │
+│  │  - Contribution │───►│                           │  │
+│  │    Calculation  │    │  - Reversible Transfers   │  │
+│  │  - Similarity   │    │  - Guardian System        │  │
+│  │    Analysis     │    │  - Staking & Governance   │  │
+│  │  - Optimization │    │                           │  │
+│  └─────────────────┘    └─────────────┬─────────────┘  │
+│                                       │                 │
+│                                       ▼                 │
+│                         ┌───────────────────────────┐  │
+│                         │  Settlement Layer         │  │
+│                         │  (Optional: Ethereum L1)  │  │
+│                         │  - Large settlements      │  │
+│                         │  - Cross-chain bridges    │  │
+│                         └───────────────────────────┘  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Technology Choices
+
+- **Core Blockchain**: Cosmos SDK (Go) or Substrate (Rust)
+- **Computation Layer**: Julia (scientific computing, royalty calculations)
+- **Prototype**: TypeScript (rapid development, testing)
+- **Consensus**: CometBFT (instant finality) or GRANDPA
+- **Block Time**: Target 1-2 seconds
 
 ## Service Layer: AI Royalty Distribution
 
@@ -362,11 +421,112 @@ Agreement_Modifier:
 
 ## Application Layer
 
-### Wallet UI
-- Token management
-- Transaction history
-- Pending transfer confirmation
-- One-time key generation/confirmation
+### Wallet UX Philosophy
+
+#### Problems with Traditional Crypto Wallets (e.g., MetaMask)
+
+| Issue | Traditional Approach | Problem |
+|:--|:--|:--|
+| **Seed Phrase** | 12-24 word backup | Users lose it, write it insecurely |
+| **Gas Fees** | Manual estimation | Confusing for non-technical users |
+| **Addresses** | 0x742d35Cc... | Not human-readable |
+| **Signing** | Raw transaction data | Scary, hard to verify |
+| **Recovery** | Seed phrase only | Lost = funds gone forever |
+| **Networks** | Manual RPC configuration | Error-prone |
+
+#### Mouseion Wallet Design Principles
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Mouseion Wallet Vision                     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1. AUTHENTICATION (No Seed Phrases)                    │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Primary: Passkey (Face ID / Fingerprint)         │ │
+│  │  Backup:  Email + SMS verification                │ │
+│  │  Recovery: Social recovery (trusted contacts)     │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                         │
+│  2. TRANSACTIONS (Human-Friendly)                       │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Recipient: @username or QR code (no hex address) │ │
+│  │  Amount: Fiat display (¥1,000 → internal tokens)  │ │
+│  │  Gas: Invisible (sponsored or included in fee)    │ │
+│  │  Status: "Cancelable for 1 hour" (clear feedback) │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                         │
+│  3. SAFETY (Reversible by Design)                       │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Grace period: Sender can cancel before confirm   │ │
+│  │  Limits: Daily/weekly transfer caps               │ │
+│  │  Alerts: Suspicious activity notifications        │ │
+│  │  Guardian: Dispute resolution for fraud           │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                         │
+│  4. ROYALTIES (Passive Income)                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Auto-receive: No claim transactions needed       │ │
+│  │  Dashboard: "This month: ¥3,240 from 5 AI models" │ │
+│  │  Withdraw: Bank transfer or external wallet       │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Technical Implementation
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              Wallet Technical Stack                     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Account Abstraction                                    │
+│  ├── Smart contract wallets (not EOA)                  │
+│  ├── Flexible signature verification                   │
+│  ├── Gas sponsorship (Paymaster)                       │
+│  └── Batch transactions                                │
+│                                                         │
+│  Authentication Options                                 │
+│  ├── WebAuthn / Passkeys (FIDO2)                       │
+│  ├── Email magic links                                 │
+│  ├── Social login (OAuth) with MPC                     │
+│  └── Hardware security modules (optional)              │
+│                                                         │
+│  Key Management                                         │
+│  ├── MPC (Multi-Party Computation) for key sharding   │
+│  ├── TEE (Trusted Execution Environment) where avail  │
+│  └── Social recovery with threshold signatures        │
+│                                                         │
+│  User Experience                                        │
+│  ├── ENS-like naming system (@username)                │
+│  ├── Fiat on/off ramps integration                     │
+│  ├── Push notifications for pending transfers          │
+│  └── Mobile-first progressive web app                  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Competitive Advantage: Reversible Transactions
+
+Traditional crypto's biggest UX problem is **irreversibility**:
+- Send to wrong address → Funds lost forever
+- Scam transaction → No recourse
+- New users → Too afraid to try
+
+Mouseion's reversible transactions solve this:
+- Mistakes are recoverable (cancel within grace period)
+- Fraud can be frozen and reversed (Guardian system)
+- New users can transact with confidence
+
+**This is our core UX differentiator.**
+
+### Wallet UI Features
+- Token management with fiat conversion display
+- Transaction history with clear status indicators
+- Pending transfer confirmation with one-tap actions
+- One-time key sharing via QR code or messaging
+- Royalty earnings dashboard with attribution details
 
 ### Data Registry
 - Data upload and metadata entry
