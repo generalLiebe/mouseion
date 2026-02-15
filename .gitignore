@@ -1,0 +1,95 @@
+# ===================
+# Private/Sensitive Files
+# ===================
+
+# Patent documents (do not publish)
+patentidea.md
+印税AI特許.doc
+
+# Original planning documents (content reorganized into docs/)
+# Uncomment if you want to keep these private
+AI印税分配システム企画書.md
+Web3 サービス ブロックチェーン設計.md
+
+# Presentation files (reference only)
+*.pptx
+
+# ===================
+# Claude Code
+# ===================
+.claude/
+
+# ===================
+# macOS
+# ===================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===================
+# Editors
+# ===================
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ===================
+# Node.js (for future web components)
+# ===================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# ===================
+# Julia (for blockchain development)
+# ===================
+*.jl.cov
+*.jl.mem
+Manifest.toml
+
+# ===================
+# Build & Output
+# ===================
+build/
+dist/
+out/
+*.log
+
+# ===================
+# Environment & Secrets
+# ===================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# ===================
+# Temporary Files
+# ===================
+tmp/
+temp/
+*.tmp
+*.bak
