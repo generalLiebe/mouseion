@@ -117,18 +117,35 @@ We maintain issues labeled `good first issue` for newcomers. These include:
 
 See [Roadmap](./docs/roadmap.md) for details.
 
-## Comparison with Existing Solutions
+## What Makes Mouseion Unique
 
-| Feature | Mouseion | Story Protocol | Sony AI | OutAI |
-|:--|:--|:--|:--|:--|
-| Contributor Identification | Yes | Yes | Music only | Limited |
-| Auto Reward Distribution | Yes | Yes | Unknown | Yes |
-| Governance | Yes | Yes | No | Yes |
-| Expert Annotation | **Unique** | No | No | No |
-| Cross-Review Evaluation | **Unique** | No | No | No |
-| Human/AI Data Separation | **Unique** | No | No | No |
-| AI Version Control | **Unique** | No | No | No |
-| Reversible Transactions | **Unique** | No | No | No |
+### Reversible Transaction Blockchain
+The foundation layer features built-in transaction reversibility - a novel approach that enables recovery from accidental transfers and fraud prevention through guardian review. This "human-friendly" blockchain design prioritizes safety without sacrificing decentralization.
+
+### Expert Annotation & Peer Review System
+A systematic approach to data quality assurance through:
+- **Classification Table**: Hierarchical categorization of expertise areas for precise expert matching
+- **Cross-Review Mechanism**: Annotations are validated by peer experts, ensuring reliability
+- **Reputation Tracking**: Expert performance history informs future selections
+
+### Human/AI Data Separation
+Addresses the critical issue of "model collapse" by:
+- Mandatory source tagging (Human / AI-generated / AI-assisted)
+- Separate indexing for different data types
+- Configurable filters for AI training datasets
+
+### AI Model Version Control
+Ensures transparency and stability through:
+- On-chain version tracking with full change history
+- Prevention of silent model changes
+- User ability to select specific model versions
+
+### Integrated Governance
+Token holders can participate in key decisions:
+- Reward distribution algorithms
+- Expert selection criteria
+- System parameter adjustments
+- Classification table updates
 
 ## Community
 

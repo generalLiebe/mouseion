@@ -146,14 +146,19 @@ IndividualReward = (ContributorScore / TotalScores) × RewardPool
 - DEX liquidity provision
 - Gradual decentralization
 
-## Comparison with Similar Tokens
+## Token Design Principles
 
-| Aspect | Mouseion | Story Protocol | OutAI |
-|:--|:--|:--|:--|
-| Primary Use | AI data rewards | IP licensing | Creator economy |
-| Governance | Full on-chain | On-chain | On-chain |
-| Staking | Expert/Guardian | Validator | Creator |
-| Burn | Fee-based | Limited | Transaction |
+### AI Data Economy Focus
+The token is specifically designed for the AI data contribution economy, with reward mechanisms tied directly to measurable contributions to AI systems.
+
+### Expert & Guardian Staking
+Unique staking model where domain experts and guardians stake tokens as collateral, aligning incentives for quality annotations and fair dispute resolution.
+
+### Contribution-Weighted Governance
+Voting power considers not just token holdings but actual contribution history, preventing pure plutocracy while rewarding active participants.
+
+### Fee-Based Sustainability
+A portion of all fees is burned, creating deflationary pressure as ecosystem usage grows, while maintaining sufficient rewards for contributors.
 
 ---
 
