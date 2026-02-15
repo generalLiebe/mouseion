@@ -69,15 +69,15 @@ Mouseionが実現すること：
 
 ## ドキュメント
 
-- [ホワイトペーパー](./docs/whitepaper.md) - プロジェクトビジョンと詳細設計
-- [アーキテクチャ](./docs/architecture.md) - システム構成の概要
-- [トークノミクス](./docs/tokenomics.md) - トークン経済設計
-- [ロードマップ](./docs/roadmap.md) - 開発フェーズ
+- [ホワイトペーパー](./docs/whitepaper_ja.md) - プロジェクトビジョンと詳細設計
+- [アーキテクチャ](./docs/architecture_ja.md) - システム構成の概要
+- [トークノミクス](./docs/tokenomics_ja.md) - トークン経済設計
+- [ロードマップ](./docs/roadmap_ja.md) - 開発フェーズ
 
 ## 仕様書
 
-- [可逆送金ブロックチェーン](./specs/reversible-blockchain.md) - Layer 1ブロックチェーン仕様
-- [印税分配システム](./specs/royalty-distribution.md) - 貢献追跡と報酬システム
+- [可逆送金ブロックチェーン](./specs/reversible-blockchain_ja.md) - Layer 1ブロックチェーン仕様
+- [印税分配システム](./specs/royalty-distribution_ja.md) - 貢献追跡と報酬システム
 
 ## はじめに
 
