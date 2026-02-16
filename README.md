@@ -74,6 +74,7 @@ A novel Layer 1 blockchain where transactions are held in a pending state until 
 - [Architecture](./docs/architecture.md) - System architecture overview
 - [Tokenomics](./docs/tokenomics.md) - Token economy design
 - [Roadmap](./docs/roadmap.md) - Development phases
+- [Monetization Strategy](./docs/monetization.md) - Revenue model and business plan
 
 ## Specifications
 
@@ -109,13 +110,14 @@ We maintain issues labeled `good first issue` for newcomers. These include:
 
 | Phase | Focus | Status |
 |:--|:--|:--|
+| Phase 0 | Survival & Validation | **Active** |
 | Phase 1 | Foundation (MVP) | In Progress |
 | Phase 2 | Contribution Tracking | Planned |
 | Phase 3 | Governance | Planned |
-| Phase 4 | Ecosystem Expansion | Planned |
-| Phase 5 | Advanced Features | Planned |
+| Phase 4 | Ecosystem Expansion & B2B | Planned |
+| Phase 5 | Advanced Features & Monetization | Planned |
 
-See [Roadmap](./docs/roadmap.md) for details.
+See [Roadmap](./docs/roadmap.md) for development phases and [Monetization Strategy](./docs/monetization.md) for business model details.
 
 ## What Makes Mouseion Unique
 

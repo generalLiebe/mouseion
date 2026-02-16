@@ -73,6 +73,7 @@ Mouseionが実現すること：
 - [アーキテクチャ](./docs/architecture_ja.md) - システム構成の概要
 - [トークノミクス](./docs/tokenomics_ja.md) - トークン経済設計
 - [ロードマップ](./docs/roadmap_ja.md) - 開発フェーズ
+- [収益化戦略](./docs/monetization_ja.md) - 収益モデルとビジネスプラン
 
 ## 仕様書
 
@@ -108,13 +109,14 @@ cd mouseion
 
 | フェーズ | 内容 | 状態 |
 |:--|:--|:--|
+| Phase 0 | 生存期間の確保 | **アクティブ** |
 | Phase 1 | 基盤構築（MVP） | 進行中 |
 | Phase 2 | 貢献追跡 | 計画中 |
 | Phase 3 | ガバナンス | 計画中 |
-| Phase 4 | エコシステム拡張 | 計画中 |
-| Phase 5 | 高度な機能 | 計画中 |
+| Phase 4 | エコシステム拡張とB2B | 計画中 |
+| Phase 5 | 高度な機能と収益化 | 計画中 |
 
-詳細は[ロードマップ](./docs/roadmap.md)をご覧ください。
+詳細は[ロードマップ](./docs/roadmap_ja.md)と[収益化戦略](./docs/monetization_ja.md)をご覧ください。
 
 ## Mouseionの独自性
 

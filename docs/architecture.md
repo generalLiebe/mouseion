@@ -75,24 +75,205 @@ We evaluated multiple blockchain frameworks for the Layer 1 implementation:
 | Framework | Language | Consensus | Key Features | Evaluation |
 |:--|:--|:--|:--|:--|
 | **Cosmos SDK** | Go | CometBFT | IBC interoperability, modular | ⭐ Primary candidate |
-| **Substrate** | Rust | BABE/GRANDPA | Forkless upgrades, Polkadot | ⭐ Strong alternative |
+| **Substrate** | Rust | BABE/GRANDPA | Forkless upgrades, flexible deployment | ⭐ Strong alternative |
 | **OP Stack** | Solidity | Ethereum L2 | EVM compatible, proven | Fallback option |
 | **Custom** | Julia/Rust | Custom | Full flexibility | High development cost |
 
-**Primary Recommendation: Cosmos SDK**
+---
 
-Reasons:
-- dYdX successfully migrated from Ethereum for performance reasons
-- Instant finality (no block reorganization) aligns well with reversible transactions
-- IBC enables future cross-chain connectivity
-- Modular architecture allows custom transaction logic
+#### Cosmos SDK Deep Dive
 
-**Alternative: Substrate**
+**Overview**
 
-Reasons:
-- Astar Network demonstrates Japanese ecosystem success
-- Forkless runtime upgrades reduce maintenance burden
-- Can operate as solo chain or Polkadot parachain
+Cosmos SDK is a modular framework for building application-specific blockchains (appchains). It separates consensus (CometBFT) from application logic, allowing developers to focus on business logic.
+
+**Key Components**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Cosmos SDK Architecture                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                Application Layer (Go)                   │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │ │
+│  │  │  Modules │  │  Keeper  │  │   Store  │             │ │
+│  │  │ (Custom) │  │ (State)  │  │  (IAVL)  │             │ │
+│  │  └──────────┘  └──────────┘  └──────────┘             │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                  CometBFT (Consensus)                   │ │
+│  │  - Byzantine Fault Tolerant                             │ │
+│  │  - Instant finality (no block reorg)                    │ │
+│  │  - ~1 second block time possible                        │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                  IBC (Interoperability)                 │ │
+│  │  - Cross-chain communication                            │ │
+│  │  - Token transfers between Cosmos chains                │ │
+│  │  - Message passing                                      │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Case Study: dYdX Migration**
+
+dYdX, a major decentralized derivatives exchange, migrated from Ethereum (StarkEx L2) to a dedicated Cosmos SDK chain:
+
+| Aspect | Before (Ethereum) | After (Cosmos SDK) |
+|:--|:--|:--|
+| TPS | ~10-100 | ~10,000+ |
+| Finality | Minutes (with rollup) | ~1 second |
+| Customization | Limited by EVM | Full control |
+| Fees | Variable, high | Predictable, low |
+| Orderbook | Off-chain | On-chain (validators) |
+
+**Relevance to Mouseion**: dYdX needed custom transaction logic (orderbook matching) that didn't fit EVM's model. Similarly, Mouseion's reversible transactions require custom state machine logic that Cosmos SDK enables.
+
+**Pros for Mouseion**
+
+1. **Instant Finality**: CometBFT provides immediate transaction finality, which is essential for reversible transactions (no risk of block reorganization undoing a "finalized" state)
+2. **Custom Modules**: Can implement pending transfers, guardian system, and cancellation logic as native modules
+3. **IBC Ready**: Future interoperability with other Cosmos chains (Osmosis for DEX, Noble for stablecoins, etc.)
+4. **Mature Ecosystem**: Well-documented, large community, many production deployments
+
+**Cons for Mouseion**
+
+1. **Go Language**: Team may need to learn Go (though TypeScript prototyping helps)
+2. **Validator Set**: Need to bootstrap initial validators
+3. **No Forkless Upgrades**: Requires coordinated upgrades (though governance can help)
+
+---
+
+#### Substrate Deep Dive
+
+**Overview**
+
+Substrate is a modular blockchain framework developed by Parity Technologies. It provides extreme flexibility and a unique "forkless upgrade" capability.
+
+**Key Components**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Substrate Architecture                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │              Runtime (WebAssembly / Native)             │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │ │
+│  │  │ Pallets  │  │ FRAME    │  │  Storage │             │ │
+│  │  │ (Custom) │  │(Framework)│  │  (Trie)  │             │ │
+│  │  └──────────┘  └──────────┘  └──────────┘             │ │
+│  │                                                         │ │
+│  │  ★ Runtime stored on-chain as WASM                     │ │
+│  │  ★ Upgrades without hard forks!                        │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                  Consensus Options                      │ │
+│  │  - BABE: Block production (probabilistic finality)      │ │
+│  │  - GRANDPA: Finality gadget (deterministic finality)    │ │
+│  │  - Aura: Simple round-robin (for testnets)              │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │               Deployment Options                        │ │
+│  │  ┌─────────────────┐    ┌─────────────────┐            │ │
+│  │  │   Solo Chain    │    │   Parachain     │            │ │
+│  │  │  (Independent)  │    │  (Polkadot)     │            │ │
+│  │  └─────────────────┘    └─────────────────┘            │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Solo Chain vs Parachain**
+
+This is a critical architectural decision:
+
+| Aspect | Solo Chain | Parachain |
+|:--|:--|:--|
+| **Independence** | Complete autonomy | Part of Polkadot ecosystem |
+| **Security** | Own validator set | Shared security from Polkadot |
+| **Interoperability** | Bridges only | Native XCMP with other parachains |
+| **Cost** | Validator infrastructure | Parachain slot auction/lease |
+| **Governance** | Fully independent | Subject to Polkadot governance |
+
+**Important Clarification**: Mouseion using Substrate does NOT mean dependence on Polkadot, Astar, or any other chain. **Solo Chain** is a fully independent blockchain that simply uses Substrate as its framework. The relationship is similar to:
+- Linux kernel → Ubuntu (uses Linux, but is independent)
+- Ruby on Rails → Any Rails app (uses Rails, but is independent)
+
+**Case Study: Astar Network**
+
+Astar chose the Parachain model to gain:
+- Shared security from Polkadot
+- Native bridges to other parachains
+- Access to Polkadot ecosystem
+
+However, for Mouseion, **Solo Chain is recommended** because:
+1. Full control over governance and tokenomics
+2. No dependency on Polkadot slot auctions
+3. Freedom to implement custom consensus parameters
+4. Can still add bridges to other chains later
+
+**Pros for Mouseion**
+
+1. **Forkless Upgrades**: Runtime (business logic) stored on-chain as WASM; upgrades happen automatically without node software updates
+2. **Rust Safety**: Memory-safe language reduces bugs in financial code
+3. **FRAME Pallets**: Pre-built modules for common functionality (balances, governance, staking)
+4. **Solo Chain Freedom**: Complete independence with no external dependencies
+
+**Cons for Mouseion**
+
+1. **Rust Complexity**: Steeper learning curve than Go
+2. **GRANDPA Finality**: Not instant (~12-30 seconds for finality gadget), though blocks are produced every 6 seconds
+3. **Smaller Ecosystem**: Fewer production deployments than Cosmos
+
+---
+
+#### Framework Comparison Matrix
+
+| Feature | Cosmos SDK | Substrate (Solo Chain) |
+|:--|:--|:--|
+| **Language** | Go | Rust |
+| **Finality Time** | ~1 second (instant) | ~12-30 seconds |
+| **Upgrade Method** | Coordinated hard fork | Forkless (WASM) |
+| **Interoperability** | IBC (Cosmos ecosystem) | Bridges (custom) |
+| **Independence** | Full | Full |
+| **Custom Logic** | Modules (Go) | Pallets (Rust) |
+| **Ecosystem Size** | Large | Medium |
+| **Learning Curve** | Moderate | Steep |
+| **Reversible Tx Fit** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+
+---
+
+#### Recommendation for Mouseion
+
+**Primary: Cosmos SDK**
+
+The instant finality of CometBFT is a critical advantage for reversible transactions. When a transaction moves to FINALIZED state, it must be truly final with no possibility of chain reorganization. Cosmos SDK provides this guarantee.
+
+**Alternative: Substrate Solo Chain**
+
+If the team has Rust expertise or values forkless upgrades highly, Substrate Solo Chain is a viable alternative. The ~12-30 second finality is acceptable for most use cases, though it creates a slightly longer window of uncertainty.
+
+**Decision Factors**
+
+| If you value... | Choose |
+|:--|:--|
+| Instant finality | Cosmos SDK |
+| Forkless upgrades | Substrate |
+| Larger ecosystem/docs | Cosmos SDK |
+| Memory safety (Rust) | Substrate |
+| IBC interoperability | Cosmos SDK |
+| Complete independence | Either (both support) |
 
 #### Hybrid Architecture
 
@@ -940,6 +1121,148 @@ The system is designed to accommodate new AI paradigms:
 - License purchasing
 - Direct sales
 
+### Model Registry & Distribution
+
+Mouseion tracks not only data contributions but also the models trained on that data, enabling royalty distribution based on actual model usage.
+
+#### Model Lifecycle on Mouseion
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  MODEL LIFECYCLE                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. DATA REGISTRATION                                        │
+│  ┌─────────────┐                                            │
+│  │Data Provider│ → Register data → Set permissions          │
+│  └─────────────┘                                            │
+│                                                              │
+│  2. LICENSING (Training Phase)                               │
+│  ┌─────────────┐    ┌─────────────┐                         │
+│  │AI Developer │ →  │ License data│ → Pay licensing fee     │
+│  │             │    │via Mouseion │                         │
+│  └─────────────┘    └─────────────┘                         │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Training happens EXTERNALLY (DePIN / Cloud)        │    │
+│  │  - Mouseion records which datasets were used        │    │
+│  │  - Mouseion does NOT perform computation            │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                              │
+│  3. MODEL REGISTRATION                                       │
+│  ┌─────────────┐    ┌─────────────┐                         │
+│  │AI Developer │ →  │Register     │ → Model metadata        │
+│  │             │    │trained model│ → Data usage proof      │
+│  └─────────────┘    └─────────────┘ → Weights or API URL    │
+│                                                              │
+│  4. MODEL ACCESS (Inference Phase)                           │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
+│  │ End User    │ →  │Request      │ →  │ Use model   │     │
+│  │             │    │API key or   │    │ (inference) │     │
+│  │             │    │weight access│    │             │     │
+│  └─────────────┘    └──────┬──────┘    └─────────────┘     │
+│                            │                                 │
+│  5. ROYALTY DISTRIBUTION   ▼                                 │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Usage tracked → Fees collected → Royalties paid    │    │
+│  │  (via reversible transactions)                      │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Model Marketplace UI
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MODEL MARKETPLACE                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  🔍 Search: [image generation___________] [Search]           │
+│                                                              │
+│  Filter: [All Types ▼] [Commercial OK ▼] [Sort: Popular ▼]  │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  🤖 ImageGen-v3                              ⭐ 4.8     │ │
+│  │  ──────────────────────────────────────────────────────│ │
+│  │  Developer: @acme_ai                                   │ │
+│  │  Training data: 2,450,000 items                        │ │
+│  │  Your contribution: 120 items (0.005%)                 │ │
+│  │  License: Commercial use allowed                       │ │
+│  │                                                        │ │
+│  │  Access Options:                                       │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐           │ │
+│  │  │  🔑 API Access   │  │  📦 Weight DL    │           │ │
+│  │  │  ¥0.10 / call    │  │  ¥50,000 (1x)    │           │ │
+│  │  │                  │  │                  │           │ │
+│  │  │  [Get API Key]   │  │  [Download]      │           │ │
+│  │  └──────────────────┘  └──────────────────┘           │ │
+│  │                                                        │ │
+│  │  💰 Your royalty: ¥0.001/API call, ¥50/download        │ │
+│  │                                                        │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  🎵 MusicGen-Pro                             ⭐ 4.5     │ │
+│  │  ──────────────────────────────────────────────────────│ │
+│  │  Developer: @sound_labs                                │ │
+│  │  Training data: 890,000 items                          │ │
+│  │  Your contribution: 0 items                            │ │
+│  │  ...                                                   │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Model Access Methods
+
+| Method | Description | Use Case |
+|:--|:--|:--|
+| **API Key** | Per-call access via Mouseion gateway | SaaS integration, pay-per-use |
+| **Weight Download** | One-time purchase of model weights | Self-hosting, fine-tuning |
+| **Subscription** | Monthly unlimited access | Enterprise users |
+| **Research License** | Free/reduced for academic use | Universities, nonprofits |
+
+#### API Gateway Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 MOUSEION API GATEWAY                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  End User Request                                            │
+│       │                                                      │
+│       ▼                                                      │
+│  ┌─────────────┐                                            │
+│  │ Mouseion    │  1. Validate API key                       │
+│  │ Gateway     │  2. Check quota/balance                    │
+│  │             │  3. Log usage (on-chain or batched)        │
+│  └──────┬──────┘                                            │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────┐                                            │
+│  │ AI Dev's    │  ← Actual inference happens here           │
+│  │ Endpoint    │  ← Mouseion does NOT host models           │
+│  │ (External)  │                                            │
+│  └──────┬──────┘                                            │
+│         │                                                    │
+│         ▼                                                    │
+│  Response returned to user                                   │
+│                                                              │
+│  ───────────────────────────────────────────────────────── │
+│                                                              │
+│  Periodically (e.g., daily):                                │
+│  ┌─────────────┐    ┌─────────────┐                         │
+│  │ Aggregate   │ →  │ Distribute  │ → Data providers        │
+│  │ usage logs  │    │ royalties   │   receive payment       │
+│  └─────────────┘    └─────────────┘                         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Design Decision**: Mouseion acts as a **lightweight gateway**, not a model hosting service. This minimizes infrastructure costs while maintaining usage tracking.
+
 ## Data Flow
 
 ### Data Registration Flow
@@ -993,6 +1316,349 @@ Proposal → Discussion → Voting → Execution (if passed)
 - Phishing protection
 - Domain verification
 
+## Cost Structure & Funding Flow
+
+### Who Pays for What?
+
+A critical question: Who bears the costs in the Mouseion ecosystem?
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FUNDING FLOW                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  AI Developer (Model Trainer)                                │
+│       │                                                      │
+│       ├──→ Compute costs ────────→ DePIN / Cloud providers  │
+│       │    (GPU rental)            (Akash, AWS, etc.)        │
+│       │                                                      │
+│       └──→ Data licensing ───────→ Mouseion                  │
+│            fees                         │                    │
+│                                         ├──→ Data providers  │
+│                                         │    (royalties)     │
+│                                         │                    │
+│                                         └──→ Mouseion        │
+│                                              (platform fee)  │
+│                                                              │
+│  ─────────────────────────────────────────────────────────  │
+│                                                              │
+│  Model User (Inference)                                      │
+│       │                                                      │
+│       └──→ API / Download ───────→ Mouseion                  │
+│            fees                         │                    │
+│                                         ├──→ AI Developer    │
+│                                         │    (model creator) │
+│                                         │                    │
+│                                         ├──→ Data providers  │
+│                                         │    (usage royalty) │
+│                                         │                    │
+│                                         └──→ Mouseion        │
+│                                              (platform fee)  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Cost Breakdown by Role
+
+| Role | Pays | Receives |
+|:--|:--|:--|
+| **Data Provider** | Nothing | Royalties from training + inference |
+| **AI Developer** | Compute + Data licensing | Revenue from model usage |
+| **Model User** | API/Download fees | Access to trained models |
+| **Mouseion** | Infrastructure (minimal) | Platform fees (% of transactions) |
+
+### Mouseion Does NOT Pay For:
+
+- ❌ GPU compute for training
+- ❌ Model hosting/inference servers
+- ❌ Data storage (uses IPFS/Arweave, paid by uploaders)
+
+### Mouseion DOES Pay For:
+
+- ✅ Blockchain node operation
+- ✅ API gateway (lightweight relay)
+- ✅ Web application hosting
+
+### Revenue Model
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 MOUSEION REVENUE SOURCES                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Data Licensing Fee (Training)                            │
+│     └── AI Developer pays to use datasets                   │
+│     └── Mouseion takes 5-10% platform fee                   │
+│     └── Rest goes to data providers                         │
+│                                                              │
+│  2. Model Access Fee (Inference)                             │
+│     └── Users pay per API call or download                  │
+│     └── Mouseion takes 5-10% platform fee                   │
+│     └── Split between AI dev and data providers             │
+│                                                              │
+│  3. Premium Features (Optional)                              │
+│     └── Priority matching for experts                       │
+│     └── Advanced analytics                                  │
+│     └── Enterprise SLAs                                     │
+│                                                              │
+│  4. Token Economics (Future)                                 │
+│     └── Staking rewards                                     │
+│     └── Governance participation                            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Example Transaction Flow
+
+```
+Scenario: AI company trains image model, user makes API call
+
+1. TRAINING PHASE
+   AI Dev licenses 1M images @ ¥0.10 each = ¥100,000
+   ├── Data providers receive: ¥90,000 (90%)
+   └── Mouseion receives: ¥10,000 (10%)
+
+2. MODEL REGISTRATION
+   AI Dev registers trained model (free, just metadata)
+
+3. INFERENCE PHASE
+   User makes 10,000 API calls @ ¥1 each = ¥10,000
+   ├── AI Developer receives: ¥7,000 (70%)
+   ├── Data providers receive: ¥2,000 (20%)
+   └── Mouseion receives: ¥1,000 (10%)
+
+Total data provider earnings: ¥92,000 for their images
+```
+
+### MVP Cost Optimization
+
+For a lean launch, Mouseion can minimize infrastructure:
+
+| Component | Full Version | MVP Version |
+|:--|:--|:--|
+| Model Hosting | Mouseion servers | AI Dev's servers (external URL) |
+| API Gateway | Full proxy | Redirect + logging only |
+| Usage Tracking | Real-time on-chain | Batched daily settlement |
+| Model Weights | IPFS + redundancy | AI Dev provides download |
+
+This keeps operational costs low while proving the core value proposition.
+
+---
+
+## Computing Resources for AI Training
+
+### The Question: Can AI Training Be Distributed Like Blockchain?
+
+A common misconception is that AI training computation can be distributed in the same way blockchain nodes share consensus work. In reality, these are fundamentally different computational paradigms.
+
+**Blockchain Consensus vs AI Training**
+
+| Aspect | Blockchain Consensus | AI Training |
+|:--|:--|:--|
+| Computation type | Hash calculation, validation | Matrix operations, gradients |
+| Data dependency | Independent blocks | Highly interdependent data |
+| Parallelization | Naturally parallel (each node validates) | Requires careful orchestration |
+| Communication | Occasional (block broadcast) | Constant (gradient sync) |
+| Latency tolerance | Minutes acceptable | Milliseconds matter |
+
+### Mouseion's Role: Incentive Layer, Not Training Layer
+
+**Critical Clarification**: Mouseion does NOT perform AI training itself. Mouseion is an **incentive and attribution layer** that:
+
+1. **Tracks data contributions** to AI models
+2. **Distributes royalties** to data providers
+3. **Manages permissions** for data usage
+4. **Provides governance** for the ecosystem
+
+AI training happens **externally**—on centralized cloud (AWS, GCP), or increasingly, on decentralized compute networks.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Mouseion Ecosystem                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                 Data Providers                          │ │
+│  │  (Register data, set permissions, receive royalties)   │ │
+│  └───────────────────────────┬────────────────────────────┘ │
+│                              │                               │
+│                              ▼                               │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │           Mouseion Blockchain (This Project)            │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │ │
+│  │  │Contribution│ │  Royalty │ │Permission│             │ │
+│  │  │ Tracking  │  │  Distrib │ │  System  │             │ │
+│  │  └──────────┘  └──────────┘  └──────────┘             │ │
+│  └───────────────────────────┬────────────────────────────┘ │
+│                              │                               │
+│                              ▼                               │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │           External Compute (NOT part of Mouseion)       │ │
+│  │                                                         │ │
+│  │  Option A: Centralized Cloud                            │ │
+│  │  ├── AWS, GCP, Azure                                    │ │
+│  │  └── Traditional GPU clusters                           │ │
+│  │                                                         │ │
+│  │  Option B: Decentralized Compute Networks (DePIN)       │ │
+│  │  ├── Akash Network (GPU marketplace)                    │ │
+│  │  ├── Render Network (GPU rendering/AI)                  │ │
+│  │  └── Bittensor (AI training network)                    │ │
+│  │                                                         │ │
+│  │  Option C: Federated Learning                           │ │
+│  │  └── Train locally, share only model updates            │ │
+│  │                                                         │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Distributed AI Training Approaches
+
+#### 1. Federated Learning (Most Privacy-Preserving)
+
+Federated Learning enables model training without centralizing data:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Federated Learning Flow                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐        │
+│   │ Node A │   │ Node B │   │ Node C │   │ Node D │        │
+│   │ (Data) │   │ (Data) │   │ (Data) │   │ (Data) │        │
+│   └───┬────┘   └───┬────┘   └───┬────┘   └───┬────┘        │
+│       │            │            │            │              │
+│       ▼            ▼            ▼            ▼              │
+│   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐        │
+│   │ Local  │   │ Local  │   │ Local  │   │ Local  │        │
+│   │Training│   │Training│   │Training│   │Training│        │
+│   └───┬────┘   └───┬────┘   └───┬────┘   └───┬────┘        │
+│       │            │            │            │              │
+│       └────────────┴─────┬──────┴────────────┘              │
+│                          │                                   │
+│                          ▼ (Only gradients, NOT raw data)   │
+│                   ┌─────────────┐                           │
+│                   │  Aggregate  │                           │
+│                   │   Updates   │                           │
+│                   └──────┬──────┘                           │
+│                          │                                   │
+│                          ▼                                   │
+│                   ┌─────────────┐                           │
+│                   │   Global    │                           │
+│                   │   Model     │                           │
+│                   └─────────────┘                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Pros**:
+- Data never leaves user devices
+- Privacy-preserving by design
+- Scales well for edge devices
+
+**Cons**:
+- Higher communication overhead
+- Model quality depends on data distribution
+- Harder to coordinate for large models (LLMs)
+
+**Mouseion Integration**: Mouseion can track which nodes participated in federated training and distribute royalties based on contribution metrics (gradient updates, data quality scores).
+
+#### 2. Decentralized Compute Networks (DePIN)
+
+Major players in 2025-2026:
+
+| Network | Focus | Key Features |
+|:--|:--|:--|
+| **Akash Network** | General cloud compute | Kubernetes-based, $4.3M ARR, integrating NVIDIA Blackwell GPUs |
+| **Render Network** | GPU rendering + AI | 300,000+ GPUs, expanding to AI workloads |
+| **Bittensor (TAO)** | AI training/inference | Subnet architecture, dTAO market-driven allocation |
+| **AIArena** | Decentralized AI training | 600+ training nodes, 19,000+ models generated |
+
+**How DePIN Works**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   DePIN Compute Flow                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   Compute Providers (GPU owners)                             │
+│   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐        │
+│   │ RTX 4090│   │ A100   │   │ H100   │   │ A6000  │        │
+│   └───┬────┘   └───┬────┘   └───┬────┘   └───┬────┘        │
+│       │            │            │            │              │
+│       └────────────┴─────┬──────┴────────────┘              │
+│                          │                                   │
+│                          ▼                                   │
+│                   ┌─────────────┐                           │
+│                   │ Marketplace │  ← Akash, Render, etc.    │
+│                   │ (Matching)  │                           │
+│                   └──────┬──────┘                           │
+│                          │                                   │
+│                          ▼                                   │
+│                   ┌─────────────┐                           │
+│                   │   AI Dev    │  ← Rents compute          │
+│                   │  (Buyer)    │  ← Pays in tokens         │
+│                   └─────────────┘                           │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Mouseion Integration**: When AI developers train models using DePIN compute, Mouseion tracks which datasets were used and ensures data providers are compensated. The compute marketplace and royalty distribution are separate but complementary.
+
+#### 3. Hybrid Approach (Recommended for Mouseion Ecosystem)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                Mouseion + DePIN Integration                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  1. Data Provider registers data on Mouseion                │
+│     └── Sets permissions, pricing, AI type restrictions     │
+│                                                              │
+│  2. AI Developer queries Mouseion for licensed data         │
+│     └── Mouseion returns eligible datasets + license terms  │
+│                                                              │
+│  3. AI Developer rents compute from DePIN                   │
+│     └── Akash/Render/Bittensor provides GPU compute         │
+│                                                              │
+│  4. Training happens on DePIN compute                       │
+│     └── Model trained using licensed data                   │
+│                                                              │
+│  5. AI Developer reports usage to Mouseion                  │
+│     └── Contribution metrics (which data, how much, etc.)   │
+│                                                              │
+│  6. Mouseion distributes royalties                          │
+│     └── Data providers receive payment via reversible tx    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Summary: Mouseion's Compute Strategy
+
+| Question | Answer |
+|:--|:--|
+| Does Mouseion do AI training? | **No** — Mouseion is an incentive/attribution layer |
+| Where does training happen? | External compute (cloud or DePIN) |
+| Can training be distributed? | Yes, via Federated Learning or DePIN |
+| What does Mouseion blockchain do? | Tracks contributions, distributes royalties, manages permissions |
+| Future integration? | Partner with DePIN networks for compute, focus on incentive layer |
+
+### Market Context (2025-2026)
+
+- Blockchain-AI market: $0.7B (2025) → projected $1.88B (2029)
+- Federated Learning market: $150M (2023) → projected $2.3B (2032), 35.4% CAGR
+- Akash Network ARR: $4.3M+, 27,000 new leases in Q3 2025
+- AIArena: 600+ training nodes, 19,000+ models generated on-chain
+
+Sources:
+- [AIArena: ACM Web Conference 2025](https://dl.acm.org/doi/10.1145/3701716.3715484)
+- [Akash Network Q3 2025 - Messari](https://messari.io/report/state-of-akash-q3-2025)
+- [Decentralized Compute Networks - Guru Startups](https://www.gurustartups.com/reports/decentralized-compute-networks-akash-render-bittensor)
+- [Blockchain-Based Federated Learning Survey - MDPI](https://www.mdpi.com/2076-3417/14/20/9459)
+- [Federated Learning Market Growth 2025](https://vertu.com/ai-tools/ai-federated-learning-transforming-industries-2025/)
+
+---
+
 ## Scalability Path
 
 ### Phase 1: Single Node (MVP)
@@ -1007,3 +1673,8 @@ Proposal → Discussion → Voting → Execution (if passed)
 - Batch processing
 - Off-chain computation
 - State channels
+
+### Phase 4: DePIN Integration (Future)
+- Partner with decentralized compute networks
+- Federated learning support for privacy-preserving training
+- Cross-chain bridges to compute marketplaces

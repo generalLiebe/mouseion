@@ -2,7 +2,49 @@
 
 ## Overview
 
-This roadmap outlines the phased development of the Mouseion protocol, from initial MVP to full ecosystem deployment.
+This roadmap outlines the phased development of the Mouseion protocol, from initial MVP to full ecosystem deployment. The roadmap integrates both technical development and business sustainability milestones.
+
+For detailed monetization strategy, see [Monetization Strategy](./monetization.md).
+
+---
+
+## Phase 0: Survival & Validation (Now - 3 months)
+
+**Focus**: Secure funding and build initial track record
+
+### Business Milestones
+
+- [ ] **B0.1** Grant Applications
+  - Web3 ecosystem grants (Cosmos, Polkadot, Web3 Foundation)
+  - AI ethics/safety grants
+  - Regional grants (NEDO/JST for Japan)
+
+- [ ] **B0.2** Initial B2B Contracts
+  - 1-2 pilot contracts with AI startups or universities
+  - Small-scale dataset licensing (1,000-10,000 items)
+  - Data provenance proof service
+
+- [ ] **B0.3** Consulting Revenue
+  - Data provenance audits
+  - Copyright compliance consultation
+
+### Technical Milestones
+
+- [ ] **T0.1** Public Repository Setup
+  - Documentation complete
+  - Whitepaper published
+  - Technical specifications available
+
+- [ ] **T0.2** Basic Prototype
+  - Core blockchain proof-of-concept
+  - Basic transaction flow demo
+
+### Success Criteria
+- Monthly revenue target: $5,000-$10,000
+- At least 1 grant application submitted
+- At least 1 pilot contract signed
+
+---
 
 ## Phase 1: Foundation (MVP)
 
@@ -106,11 +148,23 @@ This roadmap outlines the phased development of the Mouseion protocol, from init
 
 ---
 
-## Phase 4: Ecosystem Expansion
+## Phase 4: Ecosystem Expansion & B2B Scaling
 
-**Focus**: Marketplace and integrations
+**Focus**: Marketplace, integrations, and B2B revenue scaling
 
-### Milestones
+### Business Milestones
+
+- [ ] **B4.1** B2B Data Licensing at Scale
+  - 10+ enterprise customers
+  - Tiered pricing (Research, Startup, Enterprise)
+  - 80/20 revenue split (providers/platform)
+
+- [ ] **B4.2** Partnership Development
+  - Creator platform integrations
+  - AI company partnerships
+  - Academic institution agreements
+
+### Technical Milestones
 
 - [ ] **L4.1** Data marketplace
   - Data listing
@@ -137,14 +191,32 @@ This roadmap outlines the phased development of the Mouseion protocol, from init
 - API documentation
 - Mobile apps
 - Localized interfaces
+- B2B licensing portal
 
 ---
 
-## Phase 5: Advanced Features
+## Phase 5: Advanced Features & Full Monetization
 
-**Focus**: Scalability and advanced functionality
+**Focus**: Scalability, advanced functionality, and complete revenue model
 
-### Milestones
+### Business Milestones
+
+- [ ] **B5.1** Pay-per-Inference Implementation
+  - Usage tracking per API call
+  - Real-time royalty calculation
+  - Automated distribution via reversible transactions
+
+- [ ] **B5.2** Model Marketplace
+  - Trained model listings
+  - Model access fees
+  - Version-specific pricing
+
+- [ ] **B5.3** Token Launch (Optional)
+  - Governance token issuance
+  - Staking mechanisms
+  - Token-based incentives
+
+### Technical Milestones
 
 - [ ] **L5.1** AI model version management
   - Version registry
@@ -170,10 +242,17 @@ This roadmap outlines the phased development of the Mouseion protocol, from init
   - Separate indexing
   - Training filters
 
+- [ ] **L5.6** Inference Gateway
+  - API request routing
+  - Usage metering
+  - Billing integration
+
 ### Deliverables
 - Scaled infrastructure
 - Advanced analytics
 - Cross-chain bridges
+- Inference billing system
+- Full revenue model operational
 
 ---
 
@@ -181,11 +260,21 @@ This roadmap outlines the phased development of the Mouseion protocol, from init
 
 | Phase | Status | Progress |
 |:--|:--|:--|
+| Phase 0 | **In Progress** | Active |
 | Phase 1 | In Progress | Planning |
 | Phase 2 | Planned | - |
 | Phase 3 | Planned | - |
 | Phase 4 | Planned | - |
 | Phase 5 | Planned | - |
+
+## Revenue Milestones
+
+| Phase | Revenue Target | Source |
+|:--|:--|:--|
+| Phase 0 | $5K-$10K/month | Grants + Pilots |
+| Phase 1-3 | $10K-$50K/month | B2B Licensing |
+| Phase 4 | $50K-$200K/month | Marketplace Fees |
+| Phase 5 | $200K+/month | Inference Billing |
 
 ## Key Dependencies
 
@@ -194,9 +283,14 @@ This roadmap outlines the phased development of the Mouseion protocol, from init
 - Off-chain storage selection
 - AI attribution algorithm selection
 
+### Business
+- Grant funding secured
+- Initial B2B customers
+- Data provider network
+
 ### External
 - Community formation
-- Initial funding (if applicable)
+- Initial funding
 - Partnership development
 
 ## Risk Factors
