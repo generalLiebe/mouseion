@@ -288,6 +288,7 @@ export interface WalletExport {
   name?: string;
   publicKey: string;
   privateKey: string;
+  publicKeyPem: string;
   createdAt: number;
 }
 
@@ -300,6 +301,7 @@ export function exportWallet(wallet: Wallet): WalletExport {
     name: wallet.name,
     publicKey: wallet.keyPair.publicKey,
     privateKey: wallet.keyPair.privateKey,
+    publicKeyPem: wallet.keyPair.publicKeyPem,
     createdAt: wallet.createdAt,
   };
 }
@@ -316,6 +318,7 @@ export function importWalletFromExport(data: WalletExport): Wallet {
     keyPair: {
       publicKey: data.publicKey,
       privateKey: data.privateKey,
+      publicKeyPem: data.publicKeyPem,
     },
     name: data.name,
     createdAt: data.createdAt,

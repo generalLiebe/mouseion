@@ -2,11 +2,16 @@
   "name": "mouseion",
   "version": "0.1.0",
   "description": "Fair value distribution for AI contributions - Reversible transaction blockchain with AI royalty distribution",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "mouseion": "./dist/cli/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/index.ts",
+    "cli": "node --loader ts-node/esm src/cli/index.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint src --ext .ts",
@@ -23,11 +28,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0",
-    "ts-node": "^10.9.0"
+    "vitest": "^1.0.0"
   },
   "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3"
   },
   "engines": {
     "node": ">=18.0.0"
