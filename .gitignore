@@ -87,6 +87,12 @@ credentials.json
 secrets.json
 
 # ===================
+# Web GUI (Next.js)
+# ===================
+web/.next/
+web/node_modules/
+
+# ===================
 # Temporary Files
 # ===================
 tmp/

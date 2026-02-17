@@ -36,17 +36,17 @@ A novel Layer 1 blockchain where transactions are held in a pending state until 
 - Fraud prevention through guardian review
 - Safe multi-party transactions
 
-### Expert Annotation System
+### Expert Annotation System *(Planned - Phase 2)*
 - Field-specific expert selection via classification tables
 - Cross-review for quality assurance
 - Reputation-based expert matching
 
-### Human/AI Data Separation
+### Human/AI Data Separation *(Planned - Phase 5)*
 - Prevents model collapse from AI-generated training data
 - Preserves value of human-created content
 - Clear tagging: "Human", "AI-generated", "AI-assisted"
 
-### AI Model Version Control
+### AI Model Version Control *(Planned - Phase 5)*
 - On-chain version tracking
 - Prevents silent model changes
 - Users can select specific versions
@@ -63,7 +63,7 @@ A novel Layer 1 blockchain where transactions are held in a pending state until 
 │  - Contribution Tracking  - Reward Distribution             │
 │  - Governance  - Data Management                            │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 1: Reversible Transaction Blockchain (Julia)         │
+│  Layer 1: Reversible Transaction Blockchain (TypeScript)     │
 │  - Pending Transfers  - Cancellation  - Guardian Approval   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -148,6 +148,26 @@ node dist/cli/index.js demo
 | `tx history` | Show transaction history |
 | `demo` | Run interactive demo |
 
+## Web GUI
+
+Mouseion includes a web interface built with Next.js for managing wallets and transactions through your browser.
+
+```bash
+# Build the core library first
+npm run build
+
+# Start the web GUI
+cd web
+npm install
+npm run dev
+```
+
+The web interface is available at [http://localhost:3000](http://localhost:3000). It shares the same state as the CLI (`~/.mouseion/state.json`), so wallets and transactions are synchronized between both interfaces.
+
+Features: Dashboard with balance overview, send transactions, transaction management (confirm/cancel), wallet management, and dark mode.
+
+See [web/README.md](./web/README.md) for details and [Design System](./docs/design-system.md) for the UI design reference.
+
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
@@ -179,25 +199,25 @@ See [Roadmap](./docs/roadmap.md) for development phases and [Monetization Strate
 ### Reversible Transaction Blockchain
 The foundation layer features built-in transaction reversibility - a novel approach that enables recovery from accidental transfers and fraud prevention through guardian review. This "human-friendly" blockchain design prioritizes safety without sacrificing decentralization.
 
-### Expert Annotation & Peer Review System
+### Expert Annotation & Peer Review System *(Planned - Phase 2)*
 A systematic approach to data quality assurance through:
 - **Classification Table**: Hierarchical categorization of expertise areas for precise expert matching
 - **Cross-Review Mechanism**: Annotations are validated by peer experts, ensuring reliability
 - **Reputation Tracking**: Expert performance history informs future selections
 
-### Human/AI Data Separation
+### Human/AI Data Separation *(Planned - Phase 5)*
 Addresses the critical issue of "model collapse" by:
 - Mandatory source tagging (Human / AI-generated / AI-assisted)
 - Separate indexing for different data types
 - Configurable filters for AI training datasets
 
-### AI Model Version Control
+### AI Model Version Control *(Planned - Phase 5)*
 Ensures transparency and stability through:
 - On-chain version tracking with full change history
 - Prevention of silent model changes
 - User ability to select specific model versions
 
-### Integrated Governance
+### Integrated Governance *(Planned - Phase 3)*
 Token holders can participate in key decisions:
 - Reward distribution algorithms
 - Expert selection criteria

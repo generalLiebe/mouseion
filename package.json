@@ -15,7 +15,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "web:dev": "cd web && npm run dev"
   },
   "keywords": [
     "blockchain",

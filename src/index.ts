@@ -112,3 +112,6 @@ export {
   type TransactionHistoryEntry,
   type WalletExport,
 } from './wallet/wallet.js';
+
+// CLI state management (shared with Web GUI)
+export { StateManager, type CLIState } from './cli/state.js';
