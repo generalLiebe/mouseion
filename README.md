@@ -83,15 +83,70 @@ A novel Layer 1 blockchain where transactions are held in a pending state until 
 
 ## Getting Started
 
-> Note: This project is in early development. We're building the foundation.
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mouseion.git
+git clone https://github.com/generalLiebe/mouseion.git
 cd mouseion
 
-# More instructions coming soon...
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Run tests
+npm test
 ```
+
+### CLI Usage
+
+The CLI provides a complete interface for interacting with the reversible transaction blockchain.
+
+```bash
+# Create a wallet
+node dist/cli/index.js wallet create --name "MyWallet"
+
+# Get test tokens
+node dist/cli/index.js faucet 1000
+
+# Check balance
+node dist/cli/index.js balance
+
+# Send tokens (transaction starts in PENDING state)
+node dist/cli/index.js tx send <recipient-address> 100
+
+# View pending transactions
+node dist/cli/index.js tx pending
+
+# Confirm a received transaction (as recipient)
+node dist/cli/index.js tx confirm <transaction-id>
+
+# Cancel a sent transaction (as sender)
+node dist/cli/index.js tx cancel <transaction-id>
+
+# Run interactive demo
+node dist/cli/index.js demo
+```
+
+### CLI Commands
+
+| Command | Description |
+|:--|:--|
+| `wallet create` | Create a new wallet |
+| `wallet list` | List all wallets |
+| `wallet show` | Show active wallet details |
+| `wallet use <index>` | Switch active wallet |
+| `faucet [amount]` | Get test tokens |
+| `balance` | Check wallet balance |
+| `status` | Show current state |
+| `tx send` | Send tokens |
+| `tx confirm` | Confirm received transaction |
+| `tx cancel` | Cancel sent transaction |
+| `tx pending` | List pending transactions |
+| `tx history` | Show transaction history |
+| `demo` | Run interactive demo |
 
 ## Contributing
 

@@ -82,15 +82,70 @@ Mouseionが実現すること：
 
 ## はじめに
 
-> 注：このプロジェクトは初期開発段階です。基盤を構築中です。
+### インストール
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/mouseion.git
+git clone https://github.com/generalLiebe/mouseion.git
 cd mouseion
 
-# 詳細な手順は近日公開...
+# 依存関係をインストール
+npm install
+
+# ビルド
+npm run build
+
+# テスト実行
+npm test
 ```
+
+### CLIの使い方
+
+CLIは可逆送金ブロックチェーンとやり取りするための完全なインターフェースを提供します。
+
+```bash
+# ウォレット作成
+node dist/cli/index.js wallet create --name "MyWallet"
+
+# テストトークン取得
+node dist/cli/index.js faucet 1000
+
+# 残高確認
+node dist/cli/index.js balance
+
+# 送金（トランザクションはPENDING状態で開始）
+node dist/cli/index.js tx send <受取アドレス> 100
+
+# 保留中トランザクション確認
+node dist/cli/index.js tx pending
+
+# 受取確認（受取人として）
+node dist/cli/index.js tx confirm <トランザクションID>
+
+# 送金取消（送信者として）
+node dist/cli/index.js tx cancel <トランザクションID>
+
+# インタラクティブデモ実行
+node dist/cli/index.js demo
+```
+
+### CLIコマンド一覧
+
+| コマンド | 説明 |
+|:--|:--|
+| `wallet create` | 新しいウォレットを作成 |
+| `wallet list` | 全ウォレット一覧 |
+| `wallet show` | アクティブウォレットの詳細 |
+| `wallet use <index>` | アクティブウォレットを切替 |
+| `faucet [amount]` | テストトークンを取得 |
+| `balance` | 残高確認 |
+| `status` | 現在の状態を表示 |
+| `tx send` | トークンを送金 |
+| `tx confirm` | 受取トランザクションを確認 |
+| `tx cancel` | 送信トランザクションを取消 |
+| `tx pending` | 保留中トランザクション一覧 |
+| `tx history` | トランザクション履歴 |
+| `demo` | インタラクティブデモ実行 |
 
 ## コントリビューション
 
