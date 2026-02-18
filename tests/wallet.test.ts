@@ -149,19 +149,41 @@ describe('Confirming Transactions', () => {
     mintTokens(state, getAddress(alice), 10000n);
   });
 
-  it('should confirm received transaction', () => {
+  it('should confirm received transaction after grace period', () => {
     const sendResult = send(alice, state, getAddress(bob), 1000n);
     expect(sendResult.success).toBe(true);
 
-    const confirmResult = confirmReceived(bob, state, sendResult.transaction!.id);
+    // Simulate grace period expiration
+    const txId = sendResult.transaction!.id;
+    const tx = state.pendingTransactions.get(txId) || state.transactionIndex.get(txId);
+    if (tx) tx.expiresAt = Date.now() - 1000;
+
+    const confirmResult = confirmReceived(bob, state, txId);
 
     expect(confirmResult.success).toBe(true);
     expect(confirmResult.transaction?.state).toBe(TransactionState.FINALIZED);
   });
 
+  it('should reject confirmation during grace period', () => {
+    const sendResult = send(alice, state, getAddress(bob), 1000n);
+    expect(sendResult.success).toBe(true);
+
+    // Try to confirm immediately (during grace period)
+    const confirmResult = confirmReceived(bob, state, sendResult.transaction!.id);
+
+    expect(confirmResult.success).toBe(false);
+    expect(confirmResult.error).toContain('grace period');
+  });
+
   it('should update balances after confirmation', () => {
     const sendResult = send(alice, state, getAddress(bob), 1000n);
-    confirmReceived(bob, state, sendResult.transaction!.id);
+
+    // Simulate grace period expiration
+    const txId = sendResult.transaction!.id;
+    const tx = state.pendingTransactions.get(txId) || state.transactionIndex.get(txId);
+    if (tx) tx.expiresAt = Date.now() - 1000;
+
+    confirmReceived(bob, state, txId);
 
     const aliceBalance = getBalance(alice, state);
     expect(aliceBalance.available).toBe(9000n);
@@ -183,7 +205,12 @@ describe('Confirming Transactions', () => {
     const sendResult = send(alice, state, getAddress(bob), 1000n);
     const charlie = createWallet('Charlie');
 
-    const result = confirmReceived(charlie, state, sendResult.transaction!.id);
+    // Simulate grace period expiration
+    const txId = sendResult.transaction!.id;
+    const tx = state.pendingTransactions.get(txId) || state.transactionIndex.get(txId);
+    if (tx) tx.expiresAt = Date.now() - 1000;
+
+    const result = confirmReceived(charlie, state, txId);
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('recipient');

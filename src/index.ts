@@ -47,8 +47,18 @@ export {
   createHandshakeId,
   createAckId,
   verifyHandshake,
+  encryptPrivateKey,
+  decryptPrivateKey,
+  isEncryptedKey,
   type KeyPair,
+  type EncryptedKey,
 } from './crypto/index.js';
+
+// Contacts / Address Book
+export {
+  type Contact,
+  isValidAddress,
+} from './contacts/index.js';
 
 // Transaction management
 export {

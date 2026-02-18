@@ -25,13 +25,15 @@ async function request<T>(
 
 // Status
 export const getStatus = () => request("/status");
+export const getEncryptionStatus = () =>
+  request<{ encrypted: boolean }>("/status/encryption");
 
 // Wallets
 export const getWallets = () => request("/wallets");
-export const createWallet = (name?: string) =>
+export const createWallet = (name?: string, password?: string) =>
   request("/wallets", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, password }),
   });
 export const setActiveWallet = (index: number) =>
   request("/wallets/active", {
@@ -68,6 +70,7 @@ export const createTransaction = (data: {
   amount: number;
   memo?: string;
   gracePeriod?: number;
+  password?: string;
 }) =>
   request("/transactions", {
     method: "POST",
@@ -77,8 +80,33 @@ export const createTransaction = (data: {
 export const getTransaction = (txId: string) =>
   request(`/transactions/${txId}`);
 
-export const confirmTransaction = (txId: string) =>
-  request(`/transactions/${txId}/confirm`, { method: "POST" });
+export const confirmTransaction = (txId: string, password?: string) =>
+  request(`/transactions/${txId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  });
 
-export const cancelTransaction = (txId: string) =>
-  request(`/transactions/${txId}/cancel`, { method: "POST" });
+export const cancelTransaction = (txId: string, password?: string) =>
+  request(`/transactions/${txId}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  });
+
+// Contacts
+export const getContacts = () => request("/contacts");
+
+export const addContact = (data: {
+  name: string;
+  address: string;
+  memo?: string;
+}) =>
+  request("/contacts", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const removeContact = (name: string) =>
+  request("/contacts", {
+    method: "DELETE",
+    body: JSON.stringify({ name }),
+  });

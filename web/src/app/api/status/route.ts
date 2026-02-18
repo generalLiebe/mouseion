@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { loadState } from "@/lib/state-manager";
+import { loadStatePublicOnly } from "@/lib/state-manager";
 import { getBlockHeight } from "mouseion";
 
 export async function GET() {
   try {
-    const state = loadState();
+    const state = loadStatePublicOnly();
     const blockHeight = getBlockHeight(state.ledger);
 
     return NextResponse.json({

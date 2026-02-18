@@ -125,16 +125,27 @@ describe('State Transitions', () => {
     expect(isTerminalState(TransactionState.FROZEN)).toBe(false);
   });
 
-  it('should confirm a transaction', () => {
-    const result = confirmTransaction(tx, recipient.publicKey);
+  it('should confirm a transaction after grace period', () => {
+    // Simulate grace period expiration
+    const expiredTx = { ...tx, expiresAt: Date.now() - 1000 };
+    const result = confirmTransaction(expiredTx, recipient.publicKey);
 
     expect(result.success).toBe(true);
     expect(result.transaction?.state).toBe(TransactionState.FINALIZED);
     expect(result.transaction?.version).toBe(2);
   });
 
+  it('should reject confirmation during grace period', () => {
+    // tx has default grace period (1 hour), so it's still within grace period
+    const result = confirmTransaction(tx, recipient.publicKey);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('grace period');
+  });
+
   it('should reject confirmation from non-recipient', () => {
-    const result = confirmTransaction(tx, sender.publicKey);
+    const expiredTx = { ...tx, expiresAt: Date.now() - 1000 };
+    const result = confirmTransaction(expiredTx, sender.publicKey);
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('recipient');
@@ -308,7 +319,9 @@ describe('Transaction Query Functions', () => {
       sender.privateKey
     );
 
-    const result = confirmTransaction(tx, recipient.publicKey);
+    // Simulate grace period expiration before confirming
+    const expiredTx = { ...tx, expiresAt: Date.now() - 1000 };
+    const result = confirmTransaction(expiredTx, recipient.publicKey);
 
     expect(isPending(result.transaction!)).toBe(false);
     expect(isFinalized(result.transaction!)).toBe(true);

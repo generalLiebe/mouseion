@@ -17,6 +17,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useBalance } from "@/lib/hooks/use-balance";
+import { useContacts } from "@/lib/hooks/use-contacts";
+import { useEncryption } from "@/lib/hooks/use-encryption";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { formatAddress, formatGracePeriod } from "@/lib/utils";
 import { GRACE_PERIOD_OPTIONS } from "@/lib/types";
@@ -26,6 +28,8 @@ import { toast } from "sonner";
 export default function SendPage() {
   const router = useRouter();
   const { balance, mutate: mutateBalance } = useBalance();
+  const { contacts } = useContacts();
+  const { encrypted } = useEncryption();
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -35,6 +39,14 @@ export default function SendPage() {
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
+  const [password, setPassword] = useState("");
+
+  // Resolve selected contact name to display
+  const selectedContact = contacts?.find(
+    (c) =>
+      c.address.toLowerCase() === recipient.toLowerCase() ||
+      c.name.toLowerCase() === recipient.toLowerCase()
+  );
 
   const handlePaste = async () => {
     try {
@@ -63,14 +75,20 @@ export default function SendPage() {
   const handleConfirm = async () => {
     setSending(true);
     try {
+      // Resolve contact name to address
+      const resolvedRecipient =
+        selectedContact?.address || recipient;
+
       await api.createTransaction({
-        recipient,
+        recipient: resolvedRecipient,
         amount: Number(amount),
         memo: memo || undefined,
         gracePeriod: Number(gracePeriod),
+        password: encrypted ? password : undefined,
       });
       toast.success("Transaction created!");
       mutateBalance();
+      setPassword("");
       router.push("/transactions");
     } catch (error) {
       toast.error(
@@ -105,7 +123,8 @@ export default function SendPage() {
               <div className="flex gap-2">
                 <Input
                   id="recipient"
-                  placeholder="Enter recipient address"
+                  list="contact-list"
+                  placeholder="Enter address or contact name"
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
                   className="font-mono text-sm"
@@ -120,6 +139,21 @@ export default function SendPage() {
                   <Clipboard className="h-4 w-4" />
                 </Button>
               </div>
+              {/* Contacts datalist for autocomplete */}
+              {contacts && contacts.length > 0 && (
+                <datalist id="contact-list">
+                  {contacts.map((c) => (
+                    <option key={c.name} value={c.address}>
+                      {c.name}
+                    </option>
+                  ))}
+                </datalist>
+              )}
+              {selectedContact && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  Sending to: {selectedContact.name}
+                </p>
+              )}
             </div>
 
             {/* Amount */}
@@ -202,9 +236,16 @@ export default function SendPage() {
           <div className="space-y-3 py-4">
             <div className="flex justify-between text-sm">
               <span className="text-slate-500 dark:text-slate-400">To</span>
-              <code className="font-mono text-xs text-slate-800 dark:text-slate-200">
-                {formatAddress(recipient, 12)}
-              </code>
+              <span>
+                {selectedContact && (
+                  <span className="mr-2 font-medium text-slate-800 dark:text-slate-200">
+                    {selectedContact.name}
+                  </span>
+                )}
+                <code className="font-mono text-xs text-slate-800 dark:text-slate-200">
+                  {formatAddress(selectedContact?.address || recipient, 12)}
+                </code>
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-500 dark:text-slate-400">Amount</span>
@@ -222,12 +263,29 @@ export default function SendPage() {
               </span>
               <span>{formatGracePeriod(Number(gracePeriod))}</span>
             </div>
+
+            {/* Password field (only shown when encrypted) */}
+            {encrypted && (
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter wallet password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={sending}>
+            <Button
+              onClick={handleConfirm}
+              disabled={sending || (encrypted && !password)}
+            >
               {sending ? "Sending..." : "Confirm & Send"}
             </Button>
           </DialogFooter>

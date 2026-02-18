@@ -13,6 +13,9 @@ import {
   KeyObject,
   createPrivateKey,
   createPublicKey,
+  scryptSync,
+  createCipheriv,
+  createDecipheriv,
 } from 'crypto';
 import type { Hash, PublicKey, Signature } from '../blockchain/types.js';
 
@@ -225,4 +228,81 @@ export function verifyHandshake(
   const expectedAckId = createAckId(oneTimeKey, recipientPublicKey);
 
   return handshakeId === expectedHandshakeId && ackId === expectedAckId;
+}
+
+// ============================================================================
+// Private Key Encryption (AES-256-GCM with scrypt KDF)
+// ============================================================================
+
+/**
+ * Encrypted private key representation
+ */
+export interface EncryptedKey {
+  encrypted: true;
+  ciphertext: string; // hex
+  salt: string;       // hex
+  iv: string;         // hex
+  tag: string;        // hex
+}
+
+/**
+ * Encrypt a PEM private key with a password
+ * Uses scrypt for key derivation and AES-256-GCM for encryption
+ */
+export function encryptPrivateKey(pem: string, password: string): EncryptedKey {
+  const salt = randomBytes(16);
+  const iv = randomBytes(12);
+  const key = scryptSync(password, salt, 32, { N: 16384, r: 8, p: 1 });
+
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(pem, 'utf8'),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+
+  return {
+    encrypted: true,
+    ciphertext: encrypted.toString('hex'),
+    salt: salt.toString('hex'),
+    iv: iv.toString('hex'),
+    tag: tag.toString('hex'),
+  };
+}
+
+/**
+ * Decrypt an encrypted private key with a password
+ * Returns the original PEM string
+ */
+export function decryptPrivateKey(data: EncryptedKey, password: string): string {
+  const salt = Buffer.from(data.salt, 'hex');
+  const iv = Buffer.from(data.iv, 'hex');
+  const tag = Buffer.from(data.tag, 'hex');
+  const ciphertext = Buffer.from(data.ciphertext, 'hex');
+  const key = scryptSync(password, salt, 32, { N: 16384, r: 8, p: 1 });
+
+  const decipher = createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(ciphertext),
+    decipher.final(),
+  ]);
+
+  return decrypted.toString('utf8');
+}
+
+/**
+ * Type guard to check if a value is an encrypted key
+ */
+export function isEncryptedKey(value: unknown): value is EncryptedKey {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    obj.encrypted === true &&
+    typeof obj.ciphertext === 'string' &&
+    typeof obj.salt === 'string' &&
+    typeof obj.iv === 'string' &&
+    typeof obj.tag === 'string'
+  );
 }

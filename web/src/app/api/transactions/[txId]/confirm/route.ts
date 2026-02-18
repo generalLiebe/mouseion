@@ -1,14 +1,35 @@
 import { NextResponse } from "next/server";
-import { loadState, saveState, serializeBigInt } from "@/lib/state-manager";
+import {
+  loadStateWithPassword,
+  saveStateWithPassword,
+  loadState,
+  saveState,
+  isEncrypted,
+  serializeBigInt,
+} from "@/lib/state-manager";
 import { confirmReceived } from "mouseion";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ txId: string }> }
 ) {
   try {
     const { txId } = await params;
-    const state = loadState();
+    const body = await request.json().catch(() => ({}));
+    const { password } = body;
+
+    const encrypted = isEncrypted();
+
+    if (encrypted && !password) {
+      return NextResponse.json(
+        { error: "Password required — wallet is encrypted" },
+        { status: 401 }
+      );
+    }
+
+    const state = encrypted
+      ? loadStateWithPassword(password)
+      : loadState();
 
     if (!state.activeWallet) {
       return NextResponse.json(
@@ -26,7 +47,11 @@ export async function POST(
       );
     }
 
-    saveState(state);
+    if (encrypted) {
+      saveStateWithPassword(state, password);
+    } else {
+      saveState(state);
+    }
 
     return NextResponse.json({
       success: true,

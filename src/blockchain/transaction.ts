@@ -163,11 +163,12 @@ export function confirmTransaction(
     };
   }
 
-  // Check if already expired
-  if (Date.now() > tx.expiresAt) {
+  // Grace period: recipient cannot confirm until expiresAt
+  // This protects the sender's cancellation window
+  if (Date.now() < tx.expiresAt) {
     return {
       success: false,
-      error: 'Transaction has expired',
+      error: 'Cannot confirm during grace period. The sender can still cancel this transaction.',
     };
   }
 

@@ -10,6 +10,7 @@ interface AddressDisplayProps {
   chars?: number;
   className?: string;
   showCopy?: boolean;
+  label?: string;
 }
 
 export function AddressDisplay({
@@ -17,6 +18,7 @@ export function AddressDisplay({
   chars = 8,
   className,
   showCopy = true,
+  label,
 }: AddressDisplayProps) {
   const [copied, setCopied] = useState(false);
 
@@ -30,6 +32,11 @@ export function AddressDisplay({
 
   return (
     <span className={cn("inline-flex items-center gap-1", className)}>
+      {label && (
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          {label}
+        </span>
+      )}
       <code className="font-mono text-sm">{formatAddress(address, chars)}</code>
       {showCopy && (
         <button

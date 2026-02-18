@@ -7,6 +7,7 @@ import {
   Send,
   ArrowLeftRight,
   Wallet,
+  Users,
   Menu,
   X,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const ICONS = {
   Send,
   ArrowLeftRight,
   Wallet,
+  Users,
 } as const;
 
 export function Sidebar() {

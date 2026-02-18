@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { loadState, serializeBigInt } from "@/lib/state-manager";
+import { loadStatePublicOnly, serializeBigInt } from "@/lib/state-manager";
 import { getBalance } from "mouseion";
 
 export async function GET() {
   try {
-    const state = loadState();
+    const state = loadStatePublicOnly();
 
     if (!state.activeWallet) {
       return NextResponse.json(

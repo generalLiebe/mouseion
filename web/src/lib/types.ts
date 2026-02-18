@@ -53,6 +53,13 @@ export interface ApiStatus {
   activeWallet: string | null;
 }
 
+export interface ApiContact {
+  name: string;
+  address: string;
+  memo?: string;
+  createdAt: number;
+}
+
 export interface ApiError {
   error: string;
 }

@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
-import { loadState, saveState, serializeBigInt } from "@/lib/state-manager";
+import {
+  loadStatePublicOnly,
+  loadStateWithPassword,
+  saveStateWithPassword,
+  loadState,
+  saveState,
+  isEncrypted,
+  serializeBigInt,
+} from "@/lib/state-manager";
 import { createWallet, getAddress, getBalance } from "mouseion";
 
 export async function GET() {
   try {
-    const state = loadState();
+    const state = loadStatePublicOnly();
 
     const wallets = state.wallets.map((w, _i) => ({
       name: w.name,
@@ -27,9 +35,22 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { name } = body;
+    const { name, password } = body;
 
-    const state = loadState();
+    const encrypted = isEncrypted();
+
+    if (encrypted && !password) {
+      return NextResponse.json(
+        { error: "Password required — wallet is encrypted" },
+        { status: 401 }
+      );
+    }
+
+    // Load full state (with private keys) for saving
+    const state = encrypted
+      ? loadStateWithPassword(password)
+      : loadState();
+
     const wallet = createWallet(name || undefined);
     state.wallets.push(wallet);
 
@@ -37,7 +58,11 @@ export async function POST(request: Request) {
       state.activeWallet = wallet;
     }
 
-    saveState(state);
+    if (encrypted) {
+      saveStateWithPassword(state, password);
+    } else {
+      saveState(state);
+    }
 
     return NextResponse.json({
       success: true,

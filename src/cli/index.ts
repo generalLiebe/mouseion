@@ -6,10 +6,12 @@
 import { Command } from 'commander';
 import { walletCommands } from './commands/wallet.js';
 import { transactionCommands } from './commands/transaction.js';
+import { contactCommands } from './commands/contact.js';
 import { demoCommand } from './commands/demo.js';
 import { StateManager } from './state.js';
 import { mintTokens, getOrCreateAccount, getBlockHeight } from '../blockchain/ledger.js';
 import { getBalance } from '../wallet/wallet.js';
+import { promptPassword } from './prompt.js';
 
 const program = new Command();
 
@@ -24,14 +26,22 @@ program
 // Register command groups
 program.addCommand(walletCommands());
 program.addCommand(transactionCommands());
+program.addCommand(contactCommands());
 program.addCommand(demoCommand());
 
-// Faucet command (mint test tokens)
+// Faucet command (mint test tokens — needs password if encrypted since save() re-encrypts)
 program
   .command('faucet')
   .description('Get test tokens (testnet only)')
   .argument('[amount]', 'Amount of tokens to mint', '1000')
-  .action((amount: string) => {
+  .action(async (amount: string) => {
+    const isEncrypted = stateManager.isStateEncrypted();
+
+    if (isEncrypted) {
+      const password = await promptPassword('Enter password: ');
+      stateManager.setPassword(password);
+    }
+
     const state = stateManager.load();
 
     if (!state.activeWallet) {
@@ -52,12 +62,12 @@ program
     console.log(`\nNote: This only works on testnet/local mode.`);
   });
 
-// Balance command (shortcut)
+// Balance command (shortcut — public-only, no password needed)
 program
   .command('balance')
   .description('Check your wallet balance')
   .action(() => {
-    const state = stateManager.load();
+    const state = stateManager.loadPublicOnly();
 
     if (!state.activeWallet) {
       console.error('Error: No active wallet. Create one first: mouseion wallet create');
@@ -74,12 +84,12 @@ program
     console.log(`  Total:            ${balance.total.toString()}`);
   });
 
-// Status command
+// Status command (public-only, no password needed)
 program
   .command('status')
   .description('Show current state')
   .action(() => {
-    const state = stateManager.load();
+    const state = stateManager.loadPublicOnly();
 
     console.log('\n📈 Mouseion Status');
     console.log('─'.repeat(40));
@@ -95,6 +105,8 @@ program
     }
 
     console.log(`  Pending Txs:  ${state.ledger.pendingTransactions.size}`);
+    console.log(`  Encrypted:    ${stateManager.isStateEncrypted() ? 'Yes' : 'No'}`);
+    console.log(`  Contacts:     ${state.contacts.length}`);
   });
 
 // Parse and execute

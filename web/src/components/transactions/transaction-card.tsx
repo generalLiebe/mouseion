@@ -7,21 +7,28 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { AddressDisplay } from "@/components/shared/address-display";
 import { AmountDisplay } from "@/components/shared/amount-display";
 import { formatTimestamp, formatRelativeTime } from "@/lib/utils";
-import type { ApiTransactionEntry } from "@/lib/types";
+import type { ApiTransactionEntry, ApiContact } from "@/lib/types";
 
 interface TransactionCardProps {
   entry: ApiTransactionEntry;
+  contacts?: ApiContact[];
   onConfirm?: (txId: string) => void;
   onCancel?: (txId: string) => void;
 }
 
 export function TransactionCard({
   entry,
+  contacts,
   onConfirm,
   onCancel,
 }: TransactionCardProps) {
   const { transaction, direction, counterparty } = entry;
   const isPending = transaction.state === "PENDING";
+
+  // Resolve counterparty to contact name
+  const contactName = contacts?.find(
+    (c) => c.address.toLowerCase() === counterparty.toLowerCase()
+  )?.name;
 
   return (
     <Card className="transition-shadow hover:shadow-md">
@@ -54,7 +61,11 @@ export function TransactionCard({
               <span className="text-slate-500 dark:text-slate-400">
                 {direction === "sent" ? "To:" : "From:"}
               </span>
-              <AddressDisplay address={counterparty} chars={10} />
+              <AddressDisplay
+                address={counterparty}
+                chars={10}
+                label={contactName}
+              />
             </div>
 
             <div className="mt-1 flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">

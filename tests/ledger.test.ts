@@ -247,7 +247,9 @@ describe('Transaction Processing', () => {
 
     addPendingTransaction(state, tx);
 
-    const confirmResult = confirmTransaction(tx, bob.publicKey);
+    // Simulate grace period expiration before confirming
+    const expiredTx = { ...tx, expiresAt: Date.now() - 1000 };
+    const confirmResult = confirmTransaction(expiredTx, bob.publicKey);
     expect(confirmResult.success).toBe(true);
 
     processTransactionStateChange(state, tx, confirmResult.transaction!);

@@ -5,8 +5,26 @@
 import { Command } from 'commander';
 import { createWallet, getAddress, exportWallet, getBalance } from '../../wallet/wallet.js';
 import { StateManager } from '../state.js';
+import { promptPassword, promptConfirmPassword } from '../prompt.js';
+import * as readline from 'readline';
 
 const stateManager = new StateManager();
+
+/**
+ * Simple yes/no prompt
+ */
+function promptYesNo(question: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase().startsWith('y'));
+    });
+  });
+}
 
 export function walletCommands(): Command {
   const wallet = new Command('wallet').description('Wallet management commands');
@@ -16,7 +34,16 @@ export function walletCommands(): Command {
     .command('create')
     .description('Create a new wallet')
     .option('-n, --name <name>', 'Wallet name')
-    .action((options) => {
+    .action(async (options) => {
+      const isEncrypted = stateManager.isStateEncrypted();
+
+      if (isEncrypted) {
+        // Encrypted — need password to load private keys and re-save
+        const password = await promptPassword('Enter password to save wallet: ');
+        stateManager.setPassword(password);
+      }
+
+      // Load full state (with private keys) so save() preserves them
       const state = stateManager.load();
 
       const newWallet = createWallet(options.name);
@@ -25,6 +52,15 @@ export function walletCommands(): Command {
       // Set as active if it's the first wallet
       if (!state.activeWallet) {
         state.activeWallet = newWallet;
+      }
+
+      if (!isEncrypted && state.wallets.length === 1) {
+        // First wallet — offer encryption
+        const shouldEncrypt = await promptYesNo('\nEncrypt wallet with a password? (y/N): ');
+        if (shouldEncrypt) {
+          const password = await promptConfirmPassword();
+          stateManager.setPassword(password);
+        }
       }
 
       stateManager.save(state);
@@ -41,12 +77,12 @@ export function walletCommands(): Command {
       console.log('  2. Check balance:    mouseion balance');
     });
 
-  // List wallets
+  // List wallets (public-only, no password needed)
   wallet
     .command('list')
     .description('List all wallets')
     .action(() => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       if (state.wallets.length === 0) {
         console.log('\nNo wallets found. Create one with: mouseion wallet create');
@@ -72,12 +108,12 @@ export function walletCommands(): Command {
       console.log('─'.repeat(60));
     });
 
-  // Show active wallet
+  // Show active wallet (public-only)
   wallet
     .command('show')
     .description('Show active wallet details')
     .action(() => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet. Create one first: mouseion wallet create');
@@ -92,6 +128,7 @@ export function walletCommands(): Command {
       console.log(`  Name:             ${w.name || '(unnamed)'}`);
       console.log(`  Address:          ${w.keyPair.publicKey}`);
       console.log(`  Created:          ${new Date(w.createdAt).toLocaleString()}`);
+      console.log(`  Encrypted:        ${stateManager.isStateEncrypted() ? 'Yes' : 'No'}`);
       console.log('─'.repeat(60));
       console.log('  Balance:');
       console.log(`    Available:      ${balance.available.toString()}`);
@@ -105,7 +142,14 @@ export function walletCommands(): Command {
     .command('use')
     .description('Switch active wallet')
     .argument('<index>', 'Wallet index (from wallet list)')
-    .action((index: string) => {
+    .action(async (index: string) => {
+      const isEncrypted = stateManager.isStateEncrypted();
+
+      if (isEncrypted) {
+        const password = await promptPassword('Enter password: ');
+        stateManager.setPassword(password);
+      }
+
       const state = stateManager.load();
       const idx = parseInt(index, 10);
 
@@ -120,11 +164,18 @@ export function walletCommands(): Command {
       console.log(`\n✓ Switched to wallet: ${state.activeWallet.name || '(unnamed)'}`);
     });
 
-  // Export wallet (for backup)
+  // Export wallet (for backup — requires password if encrypted)
   wallet
     .command('export')
     .description('Export wallet for backup (includes private key!)')
-    .action(() => {
+    .action(async () => {
+      const isEncrypted = stateManager.isStateEncrypted();
+
+      if (isEncrypted) {
+        const password = await promptPassword('Enter password: ');
+        stateManager.setPassword(password);
+      }
+
       const state = stateManager.load();
 
       if (!state.activeWallet) {
@@ -140,12 +191,12 @@ export function walletCommands(): Command {
       console.log('─'.repeat(60));
     });
 
-  // Get address only
+  // Get address only (public-only)
   wallet
     .command('address')
     .description('Show wallet address (for receiving funds)')
     .action(() => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet');
@@ -154,6 +205,54 @@ export function walletCommands(): Command {
 
       console.log('\n📬 Your Address (share this to receive funds):');
       console.log(state.activeWallet.keyPair.publicKey);
+    });
+
+  // Encrypt existing wallet
+  wallet
+    .command('encrypt')
+    .description('Encrypt wallet with a password')
+    .action(async () => {
+      if (stateManager.isStateEncrypted()) {
+        console.error('Error: Wallet is already encrypted.');
+        process.exit(1);
+      }
+
+      const state = stateManager.load();
+
+      if (state.wallets.length === 0) {
+        console.error('Error: No wallets to encrypt.');
+        process.exit(1);
+      }
+
+      const password = await promptConfirmPassword();
+      stateManager.setPassword(password);
+      stateManager.save(state);
+
+      console.log('\n✓ Wallet encrypted successfully.');
+      console.log('  You will need this password for signing operations (send, confirm, cancel).');
+    });
+
+  // Decrypt existing wallet
+  wallet
+    .command('decrypt')
+    .description('Remove password encryption from wallet')
+    .action(async () => {
+      if (!stateManager.isStateEncrypted()) {
+        console.error('Error: Wallet is not encrypted.');
+        process.exit(1);
+      }
+
+      const password = await promptPassword('Enter current password: ');
+      stateManager.setPassword(password);
+
+      const state = stateManager.load();
+
+      // Save without password (clear it)
+      const decryptManager = new StateManager();
+      decryptManager.save(state);
+
+      console.log('\n✓ Wallet decrypted. Private keys are now stored in plaintext.');
+      console.log('  ⚠️  Consider re-encrypting for security: mouseion wallet encrypt');
     });
 
   return wallet;

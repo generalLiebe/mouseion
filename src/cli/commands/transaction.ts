@@ -13,31 +13,77 @@ import {
 import { TransactionState } from '../../blockchain/types.js';
 import { getTransaction } from '../../blockchain/ledger.js';
 import { StateManager } from '../state.js';
+import { promptPassword } from '../prompt.js';
+import { isValidAddress } from '../../contacts/validation.js';
 
 const stateManager = new StateManager();
+
+/**
+ * Ensure password is set and state is fully loaded (with private keys)
+ */
+async function loadWithPassword(): Promise<ReturnType<StateManager['load']>> {
+  const isEncrypted = stateManager.isStateEncrypted();
+
+  if (isEncrypted) {
+    const password = await promptPassword('Enter password: ');
+    stateManager.setPassword(password);
+  }
+
+  return stateManager.load();
+}
+
+/**
+ * Resolve a recipient — if it's a valid address return it, otherwise look up contact name
+ */
+function resolveRecipient(recipient: string, contacts: { name: string; address: string }[]): string | null {
+  if (isValidAddress(recipient)) {
+    return recipient;
+  }
+
+  // Try contact name resolution (case-insensitive)
+  const contact = contacts.find(
+    (c) => c.name.toLowerCase() === recipient.toLowerCase()
+  );
+
+  return contact ? contact.address : null;
+}
 
 export function transactionCommands(): Command {
   const tx = new Command('tx').description('Transaction commands');
 
   // Send funds
   tx.command('send')
-    .description('Send tokens to another address')
-    .argument('<recipient>', 'Recipient address')
+    .description('Send tokens to another address or contact name')
+    .argument('<recipient>', 'Recipient address or contact name')
     .argument('<amount>', 'Amount to send')
     .option('-m, --memo <memo>', 'Optional memo')
     .option('-g, --grace <ms>', 'Grace period in milliseconds (min 180000)', '180000')
-    .action((recipient: string, amount: string, options) => {
-      const state = stateManager.load();
+    .action(async (recipient: string, amount: string, options) => {
+      const state = await loadWithPassword();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet. Create one first: mouseion wallet create');
         process.exit(1);
       }
 
+      // Resolve recipient (address or contact name)
+      const resolvedAddress = resolveRecipient(recipient, state.contacts);
+      if (!resolvedAddress) {
+        console.error(`\n✗ Unknown recipient: "${recipient}"`);
+        console.error('  Provide a valid address (64 hex chars) or a contact name.');
+        console.error('  To add a contact: mouseion contact add <name> <address>');
+        process.exit(1);
+      }
+
+      // Show contact name if resolved
+      if (resolvedAddress !== recipient) {
+        console.log(`  Resolved "${recipient}" → ${resolvedAddress.slice(0, 20)}...`);
+      }
+
       const parsedAmount = BigInt(amount);
       const gracePeriod = parseInt(options.grace, 10);
 
-      const result = send(state.activeWallet, state.ledger, recipient, parsedAmount, {
+      const result = send(state.activeWallet, state.ledger, resolvedAddress, parsedAmount, {
         memo: options.memo,
         gracePeriod,
       });
@@ -56,7 +102,7 @@ export function transactionCommands(): Command {
       console.log('─'.repeat(60));
       console.log(`  Transaction ID: ${txn.id}`);
       console.log(`  Amount:         ${txn.amount.toString()}`);
-      console.log(`  Recipient:      ${recipient.slice(0, 30)}...`);
+      console.log(`  Recipient:      ${resolvedAddress.slice(0, 30)}...`);
       console.log(`  Status:         ${txn.state}`);
       console.log(`  Expires in:     ${expiresIn} seconds`);
       if (options.memo) {
@@ -73,8 +119,8 @@ export function transactionCommands(): Command {
   tx.command('confirm')
     .description('Confirm a received transaction')
     .argument('<txId>', 'Transaction ID (or prefix)')
-    .action((txIdPrefix: string) => {
-      const state = stateManager.load();
+    .action(async (txIdPrefix: string) => {
+      const state = await loadWithPassword();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet');
@@ -107,8 +153,8 @@ export function transactionCommands(): Command {
   tx.command('cancel')
     .description('Cancel a pending transaction you sent')
     .argument('<txId>', 'Transaction ID (or prefix)')
-    .action((txIdPrefix: string) => {
-      const state = stateManager.load();
+    .action(async (txIdPrefix: string) => {
+      const state = await loadWithPassword();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet');
@@ -137,11 +183,11 @@ export function transactionCommands(): Command {
       console.log('\n  Funds have been returned to your wallet.');
     });
 
-  // List pending transactions
+  // List pending transactions (public-only)
   tx.command('pending')
     .description('List pending transactions')
     .action(() => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet');
@@ -163,9 +209,16 @@ export function transactionCommands(): Command {
         const direction = entry.direction === 'sent' ? '→ Sent' : '← Received';
         const expiresIn = Math.max(0, Math.round((txn.expiresAt - Date.now()) / 1000));
         const shortId = txn.id.slice(0, 8);
-        const shortCounterparty = entry.counterparty.slice(0, 20) + '...';
 
-        console.log(`  ${direction} | ${shortId} | ${txn.amount.toString()} | ${shortCounterparty}`);
+        // Try to resolve counterparty to contact name
+        const contactName = state.contacts.find(
+          (c) => c.address === entry.counterparty
+        )?.name;
+        const displayCounterparty = contactName
+          ? `${contactName} (${entry.counterparty.slice(0, 12)}...)`
+          : entry.counterparty.slice(0, 20) + '...';
+
+        console.log(`  ${direction} | ${shortId} | ${txn.amount.toString()} | ${displayCounterparty}`);
         console.log(`         Expires in: ${expiresIn}s`);
         if (entry.direction === 'sent') {
           console.log(`         → Cancel: mouseion tx cancel ${shortId}`);
@@ -176,12 +229,12 @@ export function transactionCommands(): Command {
       });
     });
 
-  // Transaction history
+  // Transaction history (public-only)
   tx.command('history')
     .description('Show transaction history')
     .option('-n, --limit <n>', 'Number of transactions to show', '10')
     .action((options) => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       if (!state.activeWallet) {
         console.error('Error: No active wallet');
@@ -218,12 +271,12 @@ export function transactionCommands(): Command {
       }
     });
 
-  // Show specific transaction
+  // Show specific transaction (public-only)
   tx.command('show')
     .description('Show transaction details')
     .argument('<txId>', 'Transaction ID (or prefix)')
     .action((txIdPrefix: string) => {
-      const state = stateManager.load();
+      const state = stateManager.loadPublicOnly();
 
       const txId = findTransactionByPrefix(state, txIdPrefix);
       if (!txId) {
@@ -237,13 +290,17 @@ export function transactionCommands(): Command {
         process.exit(1);
       }
 
+      // Try to resolve sender/recipient to contact names
+      const senderContact = state.contacts.find((c) => c.address === txn.sender);
+      const recipientContact = state.contacts.find((c) => c.address === txn.recipient);
+
       console.log('\n📋 Transaction Details');
       console.log('─'.repeat(60));
       console.log(`  ID:        ${txn.id}`);
       console.log(`  Status:    ${getStatusEmoji(txn.state)} ${txn.state}`);
       console.log(`  Amount:    ${txn.amount.toString()}`);
-      console.log(`  Sender:    ${txn.sender}`);
-      console.log(`  Recipient: ${txn.recipient}`);
+      console.log(`  Sender:    ${senderContact ? `${senderContact.name} (${txn.sender.slice(0, 16)}...)` : txn.sender}`);
+      console.log(`  Recipient: ${recipientContact ? `${recipientContact.name} (${txn.recipient.slice(0, 16)}...)` : txn.recipient}`);
       console.log(`  Memo:      ${txn.memo || '(none)'}`);
       console.log(`  Created:   ${new Date(txn.createdAt).toLocaleString()}`);
       console.log(`  Expires:   ${new Date(txn.expiresAt).toLocaleString()}`);
