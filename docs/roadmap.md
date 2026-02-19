@@ -30,14 +30,15 @@ For detailed monetization strategy, see [Monetization Strategy](./monetization.m
 
 ### Technical Milestones
 
-- [ ] **T0.1** Public Repository Setup
+- [x] **T0.1** Public Repository Setup ✅ *Completed 2024-02*
   - Documentation complete
   - Whitepaper published
   - Technical specifications available
 
-- [ ] **T0.2** Basic Prototype
+- [x] **T0.2** Basic Prototype ✅ *Completed 2024-02*
   - Core blockchain proof-of-concept
   - Basic transaction flow demo
+  - CLI tool with full transaction lifecycle
 
 ### Success Criteria
 - Monthly revenue target: $5,000-$10,000
@@ -52,14 +53,16 @@ For detailed monetization strategy, see [Monetization Strategy](./monetization.m
 
 ### Milestones
 
-- [ ] **L1.1** Single-node reversible blockchain
+- [x] **L1.1** Single-node reversible blockchain ✅ *Completed*
   - Basic ledger with pending/finalized states
   - Cancel functionality
   - Time-based auto-finalization
+  - Guardian freeze/recover mechanism
 
-- [ ] **L1.2** Token issuance on base chain
+- [x] **L1.2** Token issuance on base chain ✅ *Completed*
   - Native token implementation
   - Basic transfer functionality
+  - Mint functionality for testing
 
 - [ ] **L1.3** Data registration and metadata management
   - On-chain metadata storage
@@ -70,14 +73,17 @@ For detailed monetization strategy, see [Monetization Strategy](./monetization.m
   - Fixed-ratio distribution
   - Manual trigger mechanism
 
-- [ ] **L1.5** Basic web wallet
+- [x] **L1.5** CLI Wallet ✅ *Completed*
   - Send/receive tokens
-  - Pending transfer confirmation
+  - Pending transfer confirmation/cancellation
   - Transaction history
+  - Interactive demo
 
 ### Deliverables
-- Testnet deployment
-- Basic documentation
+- [x] Local testnet (in-memory)
+- [x] Basic documentation
+- [x] CLI tool
+- [ ] Persistent testnet deployment
 - Developer setup guide
 
 ---
@@ -260,12 +266,23 @@ For detailed monetization strategy, see [Monetization Strategy](./monetization.m
 
 | Phase | Status | Progress |
 |:--|:--|:--|
-| Phase 0 | **In Progress** | Active |
-| Phase 1 | In Progress | Planning |
+| Phase 0 | **In Progress** | T0.1 ✅, T0.2 ✅, B0.1-B0.3 Pending |
+| Phase 1 | **In Progress** | L1.1 ✅, L1.2 ✅, L1.5 ✅, L1.3-L1.4 Pending |
 | Phase 2 | Planned | - |
 | Phase 3 | Planned | - |
 | Phase 4 | Planned | - |
 | Phase 5 | Planned | - |
+
+### What's Completed
+
+- ✅ Reversible transaction blockchain (core implementation)
+- ✅ Transaction state machine (PENDING → FINALIZED/CANCELLED/FROZEN/RECOVERED)
+- ✅ Wallet functionality with CLI
+- ✅ Token minting and transfers
+- ✅ Interactive demo
+- ✅ 62 passing tests
+- ✅ Documentation (whitepaper, specs, roadmap, monetization)
+- ✅ Business development materials (pilot proposal, pricing, grant templates)
 
 ## Revenue Milestones
 
@@ -279,7 +296,7 @@ For detailed monetization strategy, see [Monetization Strategy](./monetization.m
 ## Key Dependencies
 
 ### Technical
-- Julia blockchain implementation
+- Production language selection (Rust or Go for performance-critical components)
 - Off-chain storage selection
 - AI attribution algorithm selection
 
@@ -315,4 +332,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for ways to participate in development
 ---
 
 *Roadmap is subject to change based on community feedback and resource availability.*
-*Last Updated: 2024*
+*Last Updated: 2026-02*

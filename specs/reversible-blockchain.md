@@ -17,8 +17,9 @@ This enables:
 
 ### 1.2 Implementation Language
 
-- **Primary**: Julia
-- **Rationale**: High-performance numeric computing, easy experimentation with fee algorithms, strong parallel processing support
+- **Current Prototype**: TypeScript (Node.js)
+- **Future Production**: To be determined (Rust or Go are candidates for performance-critical components)
+- **Note**: Julia code examples in this specification are used for illustrative purposes. The working prototype is implemented in TypeScript.
 
 ---
 
@@ -38,7 +39,7 @@ This enables:
 │  Layer 1 (Blockchain Core)                                  │
 │  - Ledger, state management                                 │
 │  - Pending/finalized transaction states                     │
-│  - Julia implementation                                     │
+│  - TypeScript prototype                                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -308,7 +309,7 @@ end
 
 - **Pending-based transfer**: Prevention of accidental loss at protocol level
 - **Recipient consent**: Built into Layer 1 ledger
-- **Julia implementation**: Research and experimentation friendly
+- **TypeScript prototype**: Rapid iteration with rich ecosystem; production language TBD
 - **Human-centric design**: Two-button operation
 - **Future-ready**: AI and legal system integration considered
 

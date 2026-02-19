@@ -50,7 +50,7 @@ Mouseion provides:
 │  - Contribution Tracking  - Reward Distribution             │
 │  - Governance  - Data Management                            │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 1: Reversible Transaction Blockchain (Julia)         │
+│  Layer 1: Reversible Transaction Blockchain (TypeScript)     │
 │  - Pending Transfers  - Cancellation  - Guardian Approval   │
 └─────────────────────────────────────────────────────────────┘
 ```

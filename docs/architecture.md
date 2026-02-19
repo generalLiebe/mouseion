@@ -30,7 +30,7 @@ Mouseion is designed as a three-layer architecture that separates concerns while
 ├─────────────────────────────────────────────────────────────────┤
 │                      LAYER 1 (BASE)                             │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │         Reversible Transaction Blockchain (Julia)         │  │
+│  │       Reversible Transaction Blockchain (TypeScript)      │  │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │  │
 │  │  │ Pending  │  │  Cancel  │  │ Guardian │  │ One-time │  │  │
 │  │  │ Transfer │  │  Logic   │  │ Approval │  │   Keys   │  │  │
@@ -77,7 +77,7 @@ We evaluated multiple blockchain frameworks for the Layer 1 implementation:
 | **Cosmos SDK** | Go | CometBFT | IBC interoperability, modular | ⭐ Primary candidate |
 | **Substrate** | Rust | BABE/GRANDPA | Forkless upgrades, flexible deployment | ⭐ Strong alternative |
 | **OP Stack** | Solidity | Ethereum L2 | EVM compatible, proven | Fallback option |
-| **Custom** | Julia/Rust | Custom | Full flexibility | High development cost |
+| **Custom** | TypeScript/Rust | Custom | Full flexibility | High development cost |
 
 ---
 
@@ -283,7 +283,7 @@ If the team has Rust expertise or values forkless upgrades highly, Substrate Sol
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─────────────────┐    ┌───────────────────────────┐  │
-│  │  Julia Services │    │  Blockchain Core          │  │
+│  │  TS Services    │    │  Blockchain Core          │  │
 │  │                 │    │  (Cosmos SDK / Substrate) │  │
 │  │  - Contribution │───►│                           │  │
 │  │    Calculation  │    │  - Reversible Transfers   │  │
@@ -306,7 +306,7 @@ If the team has Rust expertise or values forkless upgrades highly, Substrate Sol
 #### Technology Choices
 
 - **Core Blockchain**: Cosmos SDK (Go) or Substrate (Rust)
-- **Computation Layer**: Julia (scientific computing, royalty calculations)
+- **Computation Layer**: TypeScript (scientific computing, royalty calculations)
 - **Prototype**: TypeScript (rapid development, testing)
 - **Consensus**: CometBFT (instant finality) or GRANDPA
 - **Block Time**: Target 1-2 seconds

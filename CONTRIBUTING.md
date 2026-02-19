@@ -52,7 +52,7 @@ We welcome code contributions! Here are some ways to help:
 ### Prerequisites
 
 - Git
-- Julia (for blockchain development)
+- TypeScript (for blockchain development)
 - Node.js (for web components, when applicable)
 
 ### Setting Up Development Environment
