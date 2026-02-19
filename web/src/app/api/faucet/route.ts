@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
-import { loadState, saveState, serializeBigInt } from "@/lib/state-manager";
+import {
+  loadState,
+  loadStateWithPassword,
+  saveState,
+  saveStateWithPassword,
+  isEncrypted,
+  serializeBigInt,
+} from "@/lib/state-manager";
 import { mintTokens, getBalance } from "mouseion";
 
 export async function POST(request: Request) {
   try {
-    const { amount } = await request.json();
+    const { amount, password } = await request.json();
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
@@ -13,7 +20,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const state = loadState();
+    const encrypted = isEncrypted();
+
+    if (encrypted && !password) {
+      return NextResponse.json(
+        { error: "Password is required for encrypted wallet" },
+        { status: 400 }
+      );
+    }
+
+    const state = encrypted
+      ? loadStateWithPassword(password)
+      : loadState();
 
     if (!state.activeWallet) {
       return NextResponse.json(
@@ -28,7 +46,11 @@ export async function POST(request: Request) {
       BigInt(amount)
     );
 
-    saveState(state);
+    if (encrypted) {
+      saveStateWithPassword(state, password);
+    } else {
+      saveState(state);
+    }
 
     const balance = getBalance(state.activeWallet, state.ledger);
 
